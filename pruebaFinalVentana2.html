@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario Restringido</title>
+    <style>
+        /* Comprobado en Firefox, Chrome Botón derechoBloqueado= comentado */
+        /* Estilos generales */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(90deg, #ff7eb3, #8b5cf6);
+            color: #fff;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        header, footer {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 80vh;
+            border: none;
+            margin-top: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 10px;
+        }
+
+        .alert {
+            font-size: 1rem;
+            color: red;
+        }
+
+        /* Estilos para el contador */
+        #exitWarning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: red;
+            color: black;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+            z-index: 9999;
+        }
+
+        #exitWarning p {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cuestionario Restringido</h1>
+        <p class="alert">Restricciones activas: no salgas de la ventana mientras completas el formulario.</p>
+    </header>
+
+    <main>
+        <!-- Incrustar el formulario de Google -->
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSead1aQt8ZVVE-xZ8gmqO9dq5P4QORy7MwVAKTbhSrJBGziDA/viewform?usp=preview" 
+                id="googleForm"></iframe>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Plataforma Restringida</p>
+    </footer>
+
+    <!-- Modal de advertencia -->
+    <div id="exitWarning">
+        <p><h1>Has salido de la ventana.</h1></p>  
+        <p><h1>Regresa en <span id="timer">10</span> segundos o la prueba se bloqueará.</h1></p>
+        <p>Acción no permitida registrada</p>
+    </div>
+
+    <script>
+        let exitTimer; // Temporizador para el contador
+        let timeLeft = 10; // Tiempo en segundos
+        let isWarningVisible = false;
+        let isInIframe = false;
+
+        // Función para comprobar si el foco está dentro del iframe
+        function checkIframeFocus(e) {
+            const iframe = document.getElementById('googleForm');
+            const rect = iframe.getBoundingClientRect();
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            
+            isInIframe = mouseX > rect.left && mouseX < rect.right && mouseY > rect.top && mouseY < rect.bottom;
+        }
+
+        // Mostrar el modal de advertencia
+        function showExitWarning() {
+            if (!isWarningVisible) {
+                const exitWarning = document.getElementById('exitWarning');
+                const timerElement = document.getElementById('timer');
+                exitWarning.style.display = 'block'; // Mostrar el modal
+
+                // Iniciar el contador
+                timeLeft = 10;
+                timerElement.textContent = timeLeft;
+                exitTimer = setInterval(() => {
+                    timeLeft--;
+                    timerElement.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(exitTimer);
+                        window.location.href = 'about:blank'; // Redirigir a una ventana en blanco
+                    }
+                }, 1000);
+
+                isWarningVisible = true;
+            }
+        }
+
+        // Ocultar el modal y detener el temporizador
+        function hideExitWarning() {
+            if (isWarningVisible) {
+                const exitWarning = document.getElementById('exitWarning');
+                exitWarning.style.display = 'none'; // Ocultar el modal
+                clearInterval(exitTimer); // Detener el temporizador
+                isWarningVisible = false;
+            }
+        }
+
+        // Detectar si el ratón sale de la ventana por cualquier borde (superior, inferior, lateral)
+        window.addEventListener('mouseout', (e) => {
+            checkIframeFocus(e);
+            // Detectar si el ratón está saliendo de la ventana por cualquier borde
+            if (!isInIframe) {
+                // Detectar salida por parte inferior
+                if (e.clientY >= window.innerHeight - 5) {
+                    showExitWarning();
+                }
+                // Detectar salida por la parte superior, inferior o laterales
+                if (e.clientY <= 5 || e.clientX <= 5 || e.clientX >= window.innerWidth - 5) {
+                    showExitWarning();
+                }
+            }
+        });
+
+        // Detectar si el ratón regresa a la ventana
+        window.addEventListener('mouseover', () => {
+            hideExitWarning();
+        });
+
+        // Detectar si el usuario cambia de pestaña o minimiza la ventana
+        window.addEventListener('blur', () => {
+            showExitWarning();
+        });
+
+        // Detectar si el usuario regresa a la pestaña
+        window.addEventListener('focus', () => {
+            hideExitWarning();
+        });
+
+        // // Bloquear clic derecho para evitar trucos
+        // document.addEventListener('contextmenu', (e) => {
+        //     e.preventDefault();
+        // });
+    </script>
+</body>
+</html>
